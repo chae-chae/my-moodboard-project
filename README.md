@@ -1,1 +1,1 @@
-# my-moodboard
+# my-moodboard-project
