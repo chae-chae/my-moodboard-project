@@ -1,87 +1,40 @@
 // app/components/PlaylistMoodboard.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Playlist } from "../types";
 
-type Playlist = {
-  id: string;
-  name: string;
-  images: { url: string }[];
-  description?: string;
-};
+interface PlaylistMoodboardProps {
+  playlists?: Playlist[]; // playlists를 선택적 속성으로 지정
+}
 
-type AudioFeature = {
-  energy: number;
-  valence: number;
-};
-
-export default function PlaylistMoodboard() {
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [audioFeatures, setAudioFeatures] = useState<{
-    [id: string]: AudioFeature[];
-  }>({});
+const PlaylistMoodboard: React.FC<PlaylistMoodboardProps> = ({
+  playlists = [],
+}) => {
+  const [clientPlaylists, setClientPlaylists] = useState<Playlist[]>([]);
 
   useEffect(() => {
-    async function fetchPlaylists() {
-      const response = await fetch("/api/playlist");
-      const data = await response.json();
-      setPlaylists(data.items);
-    }
-    fetchPlaylists();
-  }, []);
-
-  useEffect(() => {
-    async function fetchAudioFeatures() {
-      for (const playlist of playlists) {
-        const response = await fetch(
-          `/api/playlistAudioFeatures?playlistId=${playlist.id}`
-        );
-        const data = await response.json();
-        setAudioFeatures((prev) => ({
-          ...prev,
-          [playlist.id]: data.audio_features,
-        }));
-      }
-    }
-    if (playlists.length > 0) fetchAudioFeatures();
+    setClientPlaylists(playlists || []);
   }, [playlists]);
 
-  // 분위기에 맞는 색상을 결정하는 함수
-  const getMoodColor = (features: AudioFeature[]) => {
-    if (features.length === 0) return "bg-gray-700";
-    const avgEnergy =
-      features.reduce((sum, f) => sum + f.energy, 0) / features.length;
-    const avgValence =
-      features.reduce((sum, f) => sum + f.valence, 0) / features.length;
-
-    if (avgEnergy > 0.6 && avgValence > 0.6) return "bg-yellow-500";
-    if (avgEnergy < 0.4 && avgValence < 0.4) return "bg-blue-900";
-    if (avgEnergy > 0.6) return "bg-red-500";
-    return "bg-green-500";
-  };
-
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6">
-      {playlists.map((playlist) => {
-        const features = audioFeatures[playlist.id] || [];
-        const moodColor = getMoodColor(features);
-
-        return (
-          <div
-            key={playlist.id}
-            className={`p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105 ${moodColor}`}
-          >
+    <div className="grid grid-cols-3 gap-4 p-4">
+      {clientPlaylists.length > 0 ? (
+        clientPlaylists.map((playlist) => (
+          <div key={playlist.id} className="bg-gray-100 p-4 rounded shadow">
             <img
-              src={playlist.images[0]?.url || "/placeholder.png"}
+              src={playlist.image}
               alt={playlist.name}
-              className="w-full h-40 object-cover rounded-md mb-4"
+              className="w-full h-40 object-cover rounded"
             />
-            <h2 className="text-lg font-semibold text-white">
-              {playlist.name}
-            </h2>
+            <h3 className="mt-2 text-lg font-semibold">{playlist.name}</h3>
           </div>
-        );
-      })}
+        ))
+      ) : (
+        <p className="text-center col-span-3">No playlists available.</p>
+      )}
     </div>
   );
-}
+};
+
+export default PlaylistMoodboard;
