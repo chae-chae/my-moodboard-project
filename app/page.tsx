@@ -1,17 +1,12 @@
 // app/page.tsx
-import PlaylistMoodboard from "./components/PlaylistMoodboard";
-import CreatePlaylistForm from "./components/CreatePlaylistForm";
+"use client";
 
-export default function Home() {
+import SpotifyLoginButton from "./components/SpotifyLoginButton";
+
+export default function HomePage() {
   return (
-    <main className="min-h-screen bg-gray-900 text-white">
-      <h1 className="text-center text-4xl font-bold py-10">
-        My Spotify Moodboard
-      </h1>
-      <div className="container mx-auto px-4">
-        <CreatePlaylistForm />
-        <PlaylistMoodboard />
-      </div>
-    </main>
+    <div className="flex items-center justify-center h-screen bg-gray-50">
+      <SpotifyLoginButton />
+    </div>
   );
 }

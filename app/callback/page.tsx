@@ -9,21 +9,15 @@ export default function CallbackPage() {
 
   useEffect(() => {
     const hash = window.location.hash;
-    const token = new URLSearchParams(hash.replace("#", "")).get(
+    const token = new URLSearchParams(hash.replace("#", "?")).get(
       "access_token"
     );
 
     if (token) {
-      sessionStorage.setItem("spotifyAccessToken", token);
-      router.push("/"); // 인증 후 홈 화면으로 리디렉션
-    } else {
-      router.push("/"); // 토큰이 없으면 홈 화면으로 리디렉션
+      localStorage.setItem("spotify_access_token", token); // 토큰을 저장
+      router.push("/moodboard"); // 무드보드 페이지로 이동
     }
   }, [router]);
 
-  return (
-    <div className="flex justify-center items-center h-screen">
-      <p>Logging in...</p>
-    </div>
-  );
+  return <p>Loading...</p>;
 }
