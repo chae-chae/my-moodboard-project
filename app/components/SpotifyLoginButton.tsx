@@ -13,7 +13,7 @@ const SpotifyLoginButton: React.FC = () => {
   return (
     <a
       href={AUTH_URL}
-      className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600"
+      className="px-6 py-3 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-full font-semibold shadow-lg hover:from-green-500 hover:to-green-700 transition-transform transform hover:scale-105"
     >
       Login with Spotify
     </a>

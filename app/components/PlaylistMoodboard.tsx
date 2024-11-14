@@ -1,38 +1,35 @@
 // app/components/PlaylistMoodboard.tsx
-"use client";
-
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Playlist } from "../types";
 
 interface PlaylistMoodboardProps {
-  playlists?: Playlist[]; // playlists를 선택적 속성으로 지정
+  playlists: Playlist[];
 }
 
-const PlaylistMoodboard: React.FC<PlaylistMoodboardProps> = ({
-  playlists = [],
-}) => {
-  const [clientPlaylists, setClientPlaylists] = useState<Playlist[]>([]);
-
-  useEffect(() => {
-    setClientPlaylists(playlists || []);
-  }, [playlists]);
-
+const PlaylistMoodboard: React.FC<PlaylistMoodboardProps> = ({ playlists }) => {
   return (
-    <div className="grid grid-cols-3 gap-4 p-4">
-      {clientPlaylists.length > 0 ? (
-        clientPlaylists.map((playlist) => (
-          <div key={playlist.id} className="bg-gray-100 p-4 rounded shadow">
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {playlists.map((playlist) => (
+          <div
+            key={playlist.id}
+            className="relative bg-white shadow-lg rounded-lg overflow-hidden transform hover:scale-105 transition-transform duration-300"
+          >
             <img
               src={playlist.image}
               alt={playlist.name}
-              className="w-full h-40 object-cover rounded"
+              className="w-full h-48 object-cover"
             />
-            <h3 className="mt-2 text-lg font-semibold">{playlist.name}</h3>
+            <div className="p-4">
+              <h3 className="text-lg font-semibold">{playlist.name}</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                {playlist.description || "No description available"}
+              </p>
+            </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60"></div>
           </div>
-        ))
-      ) : (
-        <p className="text-center col-span-3">No playlists available.</p>
-      )}
+        ))}
+      </div>
     </div>
   );
 };
