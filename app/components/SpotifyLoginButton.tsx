@@ -1,5 +1,5 @@
 // app/components/SpotifyLoginButton.tsx
-import React from "react";
+"use client";
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
 const REDIRECT_URI = process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI;
@@ -9,7 +9,7 @@ const AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&
   REDIRECT_URI || ""
 )}&scope=${encodeURIComponent(SCOPE)}`;
 
-const SpotifyLoginButton: React.FC = () => {
+export default function SpotifyLoginButton() {
   return (
     <a
       href={AUTH_URL}
@@ -18,6 +18,4 @@ const SpotifyLoginButton: React.FC = () => {
       Login with Spotify
     </a>
   );
-};
-
-export default SpotifyLoginButton;
+}

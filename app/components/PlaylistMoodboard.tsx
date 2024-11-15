@@ -1,37 +1,50 @@
 // app/components/PlaylistMoodboard.tsx
-import React from "react";
-import { Playlist } from "../types";
+import { useEffect, useState } from "react";
+import { Playlist } from "../types"; // 데이터 타입에 맞춰 적절히 수정
 
-interface PlaylistMoodboardProps {
-  playlists: Playlist[];
-}
+export default function PlaylistMoodboard() {
+  const [playlist, setPlaylist] = useState<Playlist | null>(null);
 
-const PlaylistMoodboard: React.FC<PlaylistMoodboardProps> = ({ playlists }) => {
+  useEffect(() => {
+    const fetchData = async () => {
+      const accessToken = localStorage.getItem("accessToken");
+      if (accessToken) {
+        const response = await fetch(
+          "https://api.spotify.com/v1/me/playlists",
+          {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }
+        );
+        const data = await response.json();
+        setPlaylist(data);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {playlists.map((playlist) => (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-6 bg-gray-100">
+      {playlist && playlist.tracks && playlist.tracks.items ? (
+        playlist.tracks.items.map((track) => (
           <div
-            key={playlist.id}
-            className="relative bg-white shadow-lg rounded-lg overflow-hidden transform hover:scale-105 transition-transform duration-300"
+            key={track.track.id}
+            className="bg-white rounded-lg shadow-lg overflow-hidden"
           >
             <img
-              src={playlist.image}
-              alt={playlist.name}
-              className="w-full h-48 object-cover"
+              src={track.track.album.images[0].url}
+              alt={track.track.name}
+              className="w-full h-32 object-cover"
             />
             <div className="p-4">
-              <h3 className="text-lg font-semibold">{playlist.name}</h3>
-              <p className="text-sm text-gray-500 mt-1">
-                {playlist.description || "No description available"}
-              </p>
+              <h2 className="text-lg font-semibold">{track.track.name}</h2>
+              <p className="text-gray-500">{track.track.artists[0].name}</p>
             </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60"></div>
           </div>
-        ))}
-      </div>
+        ))
+      ) : (
+        <p>Loading playlist...</p>
+      )}
     </div>
   );
-};
-
-export default PlaylistMoodboard;
+}
