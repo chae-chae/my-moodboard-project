@@ -1,32 +1,65 @@
 import React, { useEffect, useState } from "react";
 import { fetchUnsplashImage } from "../../lib/unsplash";
+import { fetchAudioFeatures } from "../../lib/spotify";
 import { Playlist } from "../types";
 
 type PlaylistMoodboardProps = {
   playlist: Playlist | null;
+  accessToken: string; // Spotify API 엑세스 토큰
 };
 
-const PlaylistMoodboard: React.FC<PlaylistMoodboardProps> = ({ playlist }) => {
+const PlaylistMoodboard: React.FC<PlaylistMoodboardProps> = ({
+  playlist,
+  accessToken,
+}) => {
   const [images, setImages] = useState<{ [key: string]: string | null }>({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchImages = async () => {
       if (!playlist) return;
 
+      // 트랙 ID 배열 추출
+      const trackIds = playlist.tracks.items.map((item) => item.track.id);
+
+      // Spotify API에서 오디오 특징 가져오기
+      const audioFeatures = await fetchAudioFeatures(accessToken, trackIds);
+
       const newImages: { [key: string]: string | null } = {};
+
       for (const item of playlist.tracks.items) {
-        const track = item.track; // 트랙 정보 추출
-        const mood = "chill"; // (여기선 단순히 'chill'로 설정. 오디오 특징 추가 가능)
-        newImages[track.id] = await fetchUnsplashImage(mood);
+        const track = item.track;
+        const features = audioFeatures[track.id];
+
+        if (features) {
+          // 분위기 키워드 결정 (valence: 감정적 톤, energy: 에너지 레벨)
+          const mood =
+            features.valence > 0.5
+              ? features.energy > 0.5
+                ? "energetic"
+                : "happy"
+              : features.energy > 0.5
+              ? "dark"
+              : "chill";
+
+          // Unsplash API를 통해 이미지 가져오기
+          newImages[track.id] = await fetchUnsplashImage(mood);
+        }
       }
+
       setImages(newImages);
+      setLoading(false);
     };
 
     fetchImages();
-  }, [playlist]);
+  }, [playlist, accessToken]);
 
   if (!playlist) {
     return <div>Loading...</div>;
+  }
+
+  if (loading) {
+    return <div>Generating moodboard...</div>;
   }
 
   return (
