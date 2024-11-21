@@ -1,45 +1,26 @@
 // app/moodboard/page.tsx
-"use client";
-
-import { useEffect, useState } from "react";
+import { cookies } from "next/headers";
+import { fetchSpotifyPlaylist, fetchAudioFeatures } from "../../lib/spotify";
 import PlaylistMoodboard from "../components/PlaylistMoodboard";
-import { Playlist } from "../types";
 
-export default function MoodboardPage() {
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+export default async function MoodboardPage() {
+  const cookieStore = await cookies(); // cookies()를 비동기적으로 처리
+  const accessToken = cookieStore.get("spotifyAccessToken")?.value;
 
-  useEffect(() => {
-    const token = localStorage.getItem("spotify_access_token");
+  if (!accessToken) {
+    return <div>Access token is missing. Please log in.</div>;
+  }
 
-    if (token) {
-      fetch("https://api.spotify.com/v1/me/playlists", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          const playlistsData = data.items.map((item: any) => ({
-            id: item.id,
-            name: item.name,
-            image: item.images[0]?.url || "",
-            description: item.description,
-          }));
-          setPlaylists(playlistsData);
-        })
-        .catch((error) => console.error("Error fetching playlists:", error));
-    }
-  }, []);
+  const playlistId = "YOUR_PLAYLIST_ID"; // 여기에는 실제 플레이리스트 ID를 입력하세요
+  const playlist = await fetchSpotifyPlaylist(accessToken, playlistId);
+
+  const trackIds = playlist.tracks.items.map((item: any) => item.track.id);
+  const audioFeatures = await fetchAudioFeatures(accessToken, trackIds);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-300 p-8">
-      <h1 className="text-4xl font-bold text-center text-gray-800 mb-4">
-        Your Moodboard
-      </h1>
-      <p className="text-center text-gray-600 mb-8">
-        Discover your playlists beautifully organized as a moodboard.
-      </p>
-      <PlaylistMoodboard playlists={playlists} />
+    <div>
+      <h1 className="text-3xl font-bold mb-4">Moodboard</h1>
+      <PlaylistMoodboard playlist={playlist} audioFeatures={audioFeatures} />
     </div>
   );
 }

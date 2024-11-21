@@ -15,3 +15,10 @@ export interface Playlist {
     }[];
   };
 }
+
+export interface AudioFeatures {
+  [trackId: string]: {
+    valence: number;
+    energy: number;
+  };
+}
