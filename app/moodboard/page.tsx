@@ -1,26 +1,35 @@
-// app/moodboard/page.tsx
 import { cookies } from "next/headers";
 import { fetchSpotifyPlaylist, fetchAudioFeatures } from "../../lib/spotify";
 import PlaylistMoodboard from "../components/PlaylistMoodboard";
 
 export default async function MoodboardPage() {
-  const cookieStore = await cookies(); // cookies()를 비동기적으로 처리
+  const cookieStore = await cookies(); // 'await' 추가
   const accessToken = cookieStore.get("spotifyAccessToken")?.value;
 
   if (!accessToken) {
     return <div>Access token is missing. Please log in.</div>;
   }
 
-  const playlistId = "YOUR_PLAYLIST_ID"; // 여기에는 실제 플레이리스트 ID를 입력하세요
-  const playlist = await fetchSpotifyPlaylist(accessToken, playlistId);
+  const playlistId = "YOUR_PLAYLIST_ID"; // 실제 Playlist ID로 교체
 
-  const trackIds = playlist.tracks.items.map((item: any) => item.track.id);
-  const audioFeatures = await fetchAudioFeatures(accessToken, trackIds);
+  try {
+    const playlist = await fetchSpotifyPlaylist(accessToken, playlistId);
 
-  return (
-    <div>
-      <h1 className="text-3xl font-bold mb-4">Moodboard</h1>
+    if (!playlist.tracks || playlist.tracks.items.length === 0) {
+      return <div>No tracks available in the playlist.</div>;
+    }
+
+    const trackIds = playlist.tracks.items.map(
+      (item: { track: { id: string } }) => item.track.id
+    );
+
+    const audioFeatures = await fetchAudioFeatures(accessToken, trackIds);
+
+    return (
       <PlaylistMoodboard playlist={playlist} audioFeatures={audioFeatures} />
-    </div>
-  );
+    );
+  } catch (error) {
+    console.error("Error fetching Spotify data:", error);
+    return <div>Failed to load playlist. Please try again later.</div>;
+  }
 }
