@@ -1,23 +1,29 @@
-// app/callback/page.tsx
 "use client";
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-export default function CallbackPage() {
+const CallbackPage = () => {
   const router = useRouter();
 
   useEffect(() => {
+    // URL에서 Access Token 파싱
     const hash = window.location.hash;
-    const token = new URLSearchParams(hash.replace("#", "?")).get(
-      "access_token"
-    );
+    const params = new URLSearchParams(hash.substring(1)); // '#' 뒤의 값 처리
+    const accessToken = params.get("access_token");
 
-    if (token) {
-      localStorage.setItem("spotify_access_token", token); // 토큰을 저장
-      router.push("/moodboard"); // 무드보드 페이지로 이동
+    if (accessToken) {
+      // Access Token을 쿠키에 저장
+      document.cookie = `spotifyAccessToken=${accessToken}; path=/; max-age=3600`;
+
+      // Moodboard 페이지로 이동
+      router.push("/moodboard");
+    } else {
+      console.error("Access token is missing");
     }
   }, [router]);
 
-  return <p>Loading...</p>;
-}
+  return <div>Processing authentication...</div>;
+};
+
+export default CallbackPage;
