@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  const clientId = process.env.SPOTIFY_CLIENT_ID!;
-  const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/callback/spotify`;
-  const scopes = [
-    "user-read-private",
-    "user-read-email",
-    "playlist-read-private",
-  ].join(" ");
+  const scope = ["playlist-read-private", "playlist-read-collaborative"].join(
+    " "
+  );
 
-  const spotifyAuthUrl = `https://accounts.spotify.com/authorize?response_type=code&client_id=${clientId}&scope=${encodeURIComponent(
-    scopes
-  )}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+  const params = new URLSearchParams({
+    client_id: process.env.SPOTIFY_CLIENT_ID!,
+    response_type: "token",
+    redirect_uri: "http://localhost:3000/api/auth/callback",
+    scope,
+  });
 
+  const spotifyAuthUrl = `https://accounts.spotify.com/authorize?${params.toString()}`;
   return NextResponse.redirect(spotifyAuthUrl);
 }

@@ -2,38 +2,31 @@
 import axios from "axios";
 
 /**
- * Spotify API에서 특정 플레이리스트를 가져옵니다.
+ * Spotify API에서 플레이리스트를 가져옵니다.
  * @param accessToken Spotify API의 엑세스 토큰
  * @param playlistId Spotify 플레이리스트 ID
  * @returns 플레이리스트 데이터
  */
-export const fetchSpotifyPlaylist = async (
+export async function fetchSpotifyPlaylist(
   accessToken: string,
   playlistId: string
-): Promise<any> => {
-  const response = await fetch(
-    `https://api.spotify.com/v1/playlists/${playlistId}`,
-    {
+) {
+  const url = `https://api.spotify.com/v1/playlists/${playlistId}`;
+  try {
+    const response = await axios.get(url, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
-    }
-  );
-
-  if (!response.ok) {
-    console.error("Failed to fetch playlist:", response.statusText);
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      "Failed to fetch playlist:",
+      error.response?.data || error.message
+    );
     throw new Error("Failed to fetch playlist");
   }
-
-  const data = await response.json();
-
-  // tracks가 없는 경우 기본값 설정
-  if (!data.tracks || !data.tracks.items) {
-    data.tracks = { items: [] }; // 기본값
-  }
-
-  return data;
-};
+}
 
 /**
  * Spotify API에서 트랙 ID 배열에 대한 오디오 특징을 가져옵니다.
