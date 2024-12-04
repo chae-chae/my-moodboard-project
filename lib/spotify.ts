@@ -1,124 +1,91 @@
-// lib/spotify.ts
 import axios from "axios";
 
-export async function fetchSpotifyPlaylist(
-  accessToken: string,
-  playlistId: string
-) {
-  const url = `https://api.spotify.com/v1/playlists/${playlistId}`;
+// 새로운 Access Token을 얻기 위한 함수
+async function refreshAccessToken(refreshToken: string): Promise<string> {
+  const clientId = process.env.SPOTIFY_CLIENT_ID!;
+  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET!;
 
-  try {
-    console.log("Fetching playlist:", { url, accessToken }); // 요청 디버깅
-
-    const response = await fetch(url, {
+  const response = await axios.post(
+    "https://accounts.spotify.com/api/token",
+    new URLSearchParams({
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+    }),
+    {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization:
+          "Basic " +
+          Buffer.from(`${clientId}:${clientSecret}`).toString("base64"),
+        "Content-Type": "application/x-www-form-urlencoded",
       },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Failed to fetch playlist:", errorData); // 에러 응답 디버깅
-      throw new Error("Failed to fetch playlist");
     }
+  );
 
-    const data = await response.json();
-    console.log("Fetched Playlist Data:", data); // 성공적인 응답 디버깅
-    return data;
-  } catch (error: any) {
-    console.error("Error in fetchSpotifyPlaylist:", error.message);
-    throw new Error(error.response?.data || error.message);
-  }
+  return response.data.access_token;
 }
 
-// /**
-//  * Spotify API에서 트랙 ID 배열에 대한 오디오 특징을 가져옵니다.
-//  * @param accessToken Spotify API의 엑세스 토큰
-//  * @param trackIds 트랙 ID 배열
-//  * @returns 오디오 특징 배열
-//  */
-// export const fetchAudioFeatures = async (
-//   accessToken: string,
-//   trackIds: string[]
-// ): Promise<{ [trackId: string]: { valence: number; energy: number } }> => {
-//   if (trackIds.length === 0) return {};
-
-//   const chunkSize = 100; // Spotify API는 최대 100개의 트랙 ID만 허용
-//   const chunks = [];
-//   for (let i = 0; i < trackIds.length; i += chunkSize) {
-//     chunks.push(trackIds.slice(i, i + chunkSize));
-//   }
-
-//   const audioFeatures: {
-//     [trackId: string]: { valence: number; energy: number };
-//   } = {};
-
-//   for (const chunk of chunks) {
-//     const response = await axios.get(
-//       `https://api.spotify.com/v1/audio-features`,
-//       {
-//         headers: {
-//           Authorization: `Bearer ${accessToken}`,
-//         },
-//         params: {
-//           ids: chunk.join(","),
-//         },
-//       }
-//     );
-
-//     // Spotify API 응답에서 오디오 특징 저장
-//     for (const feature of response.data.audio_features) {
-//       if (feature) {
-//         audioFeatures[feature.id] = {
-//           valence: feature.valence,
-//           energy: feature.energy,
-//         };
-//       }
-//     }
-//   }
-
-//   return audioFeatures;
-// };
-
+// Spotify Audio Features API 호출
 export async function fetchAudioFeatures(
   accessToken: string,
   playlist: any
 ): Promise<{ [trackId: string]: { valence: number; energy: number } }> {
   const trackIds = playlist.tracks.items.map((item: any) => item.track.id);
 
-  console.log("Fetching audio features for track IDs:", trackIds); // 디버깅 로그
+  try {
+    const response = await axios.get(
+      "https://api.spotify.com/v1/audio-features",
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        params: {
+          ids: trackIds.join(","),
+        },
+      }
+    );
 
-  // Spotify Audio Features API 호출
-  const response = await axios.get(
-    "https://api.spotify.com/v1/audio-features",
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      params: {
-        ids: trackIds.join(","), // 트랙 ID들을 콤마로 연결
-      },
+    const audioFeatures = response.data.audio_features;
+
+    const featuresMap: {
+      [trackId: string]: { valence: number; energy: number };
+    } = {};
+    audioFeatures.forEach((feature: any) => {
+      if (feature) {
+        featuresMap[feature.id] = {
+          valence: feature.valence,
+          energy: feature.energy,
+        };
+      }
+    });
+
+    return featuresMap;
+  } catch (error: any) {
+    if (error.response?.status === 403) {
+      console.error("Access token might be expired. Refreshing...");
+      // 만료된 토큰이라면 새로운 토큰으로 다시 시도
+      const refreshToken = process.env.SPOTIFY_REFRESH_TOKEN!;
+      const newAccessToken = await refreshAccessToken(refreshToken);
+
+      // 재귀적으로 호출하여 새로운 토큰으로 데이터 가져오기
+      return fetchAudioFeatures(newAccessToken, playlist);
     }
-  );
 
-  console.log("Audio Features API Response:", response.data); // 디버깅 로그
+    console.error("Error fetching audio features:", error.message);
+    throw error;
+  }
+}
 
-  const audioFeatures = response.data.audio_features;
+export function getSpotifyLoginUrl() {
+  const scopes = [
+    "user-read-private",
+    "playlist-read-private",
+    "playlist-read-collaborative",
+  ].join(" "); // 필요한 스코프 추가
 
-  // 트랙 ID를 key로 가지는 객체 생성
-  const featuresMap: {
-    [trackId: string]: { valence: number; energy: number };
-  } = {};
-  audioFeatures.forEach((feature: any) => {
-    if (feature) {
-      featuresMap[feature.id] = {
-        valence: feature.valence,
-        energy: feature.energy,
-      };
-    }
-  });
-
-  console.log("Processed Audio Features Map:", featuresMap); // 디버깅 로그
-
-  return featuresMap;
+  return `https://accounts.spotify.com/authorize?${new URLSearchParams({
+    client_id: process.env.SPOTIFY_CLIENT_ID!,
+    response_type: "code", // Authorization Code Flow
+    redirect_uri: process.env.SPOTIFY_REDIRECT_URI!, // 인증 후 리다이렉트될 URI
+    scope: scopes, // 스코프 추가
+  }).toString()}`;
 }
