@@ -3,12 +3,11 @@ import { fetchSpotifyPlaylist, fetchAudioFeatures } from "../../lib/spotify";
 import PlaylistMoodboard from "../components/PlaylistMoodboard";
 
 export default async function Page() {
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get("spotifyAccessToken")?.value;
+  const cookieStore = cookies();
+  const accessToken = (await cookieStore).get("spotifyAccessToken")?.value;
 
-  console.log("Access Token:", accessToken);
+  console.log("Access Token:", accessToken); // 디버깅용
 
-  // playlistId를 환경 변수에서 가져오거나 기본값 설정
   const playlistId =
     process.env.SPOTIFY_PLAYLIST_ID || "3cEYpjA9oz9GiPac4AsH4n";
 
@@ -17,8 +16,12 @@ export default async function Page() {
   }
 
   try {
+    // Spotify Playlist 및 Audio Features 가져오기
     const playlist = await fetchSpotifyPlaylist(accessToken, playlistId);
+    console.log("Fetched Playlist:", playlist); // 디버깅용
+
     const audioFeatures = await fetchAudioFeatures(accessToken, playlist);
+    console.log("Fetched Audio Features:", audioFeatures); // 디버깅용
 
     return (
       <div>

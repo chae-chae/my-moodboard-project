@@ -1,5 +1,40 @@
 import axios from "axios";
 
+// Playlist 호출 함수
+export async function fetchSpotifyPlaylist(
+  accessToken: string,
+  playlistId: string
+): Promise<any> {
+  try {
+    const response = await axios.get(
+      `https://api.spotify.com/v1/playlists/${playlistId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    return response.data; // 성공적으로 Playlist 데이터 반환
+  } catch (error: any) {
+    // Access Token이 만료된 경우 새로 갱신
+    if (error.response?.status === 401) {
+      console.error("Access token expired. Refreshing...");
+      const refreshToken = process.env.SPOTIFY_REFRESH_TOKEN!;
+      const newAccessToken = await refreshAccessToken(refreshToken);
+
+      // 새로운 Access Token으로 재시도
+      return fetchSpotifyPlaylist(newAccessToken, playlistId);
+    }
+
+    console.error(
+      "Failed to fetch playlist:",
+      error.response?.data || error.message
+    );
+    throw new Error("Failed to fetch playlist");
+  }
+}
+
 // 새로운 Access Token을 얻기 위한 함수
 async function refreshAccessToken(refreshToken: string): Promise<string> {
   const clientId = process.env.SPOTIFY_CLIENT_ID!;
