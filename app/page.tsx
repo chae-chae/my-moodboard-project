@@ -1,26 +1,16 @@
-// app/page.tsx
-"use client";
-
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import PlaylistMoodboard from "./components/PlaylistMoodboard";
+import PlaylistForm from "./components/PlaylistForm";
 
 export default function HomePage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    const accessToken = localStorage.getItem("accessToken");
-
-    // 로그인이 안 되어 있으면 로그인 페이지로 리디렉션
-    if (!accessToken) {
-      router.push("/login");
-    }
-  }, [router]);
-
-  // 로그인 후에만 Moodboard 페이지 표시
   return (
-    <main className="flex items-center justify-center min-h-screen bg-gray-100">
-      <PlaylistMoodboard />
-    </main>
+    <div className="flex flex-col items-center justify-center min-h-screen">
+      <div className="bg-[#282828] shadow-xl rounded-lg max-w-2xl p-8 text-center">
+        <h1 className="text-4xl font-bold text-[#1DB954]">Spotify Moodboard</h1>
+        <p className="text-gray-300 mt-4">
+          Enter a Spotify Playlist ID to generate a moodboard that matches the
+          vibe of your playlist.
+        </p>
+        <PlaylistForm />
+      </div>
+    </div>
   );
 }
