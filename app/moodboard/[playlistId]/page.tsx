@@ -1,6 +1,6 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import PlaylistHeader from "./components/PlaylistHeader";
-import TrackCard from "./components/TrackCard";
 
 interface PlaylistData {
   name: string;
@@ -15,7 +15,7 @@ interface Track {
   artist: string;
   album: string;
   imageUrl: string;
-  previewUrl: string; // Spotify에서 제공하는 미리 듣기 URL
+  previewUrl: string;
 }
 
 export default function MoodboardPage({
@@ -53,19 +53,38 @@ export default function MoodboardPage({
   }, [playlistId]);
 
   if (!playlistData) {
-    return <div>Loading...</div>;
+    return <div className="text-white text-center">Loading...</div>;
   }
 
   return (
     <div className="min-h-screen bg-[#121212] text-white p-8">
-      <PlaylistHeader
-        name={playlistData.name}
-        description={playlistData.description}
-        imageUrl={playlistData.imageUrl}
-      />
+      <header className="text-center">
+        <h1 className="text-4xl font-bold">{playlistData.name}</h1>
+        <p className="text-gray-400">{playlistData.description}</p>
+        <img
+          src={playlistData.imageUrl}
+          alt={playlistData.name}
+          className="w-64 h-64 mx-auto mt-4 rounded-lg shadow-lg"
+        />
+      </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
         {playlistData.tracks.map((track) => (
-          <TrackCard key={track.id} track={track} />
+          <div
+            key={track.id}
+            className="bg-gray-800 p-4 rounded-lg shadow-lg hover:bg-gray-700 transition"
+          >
+            <img
+              src={track.imageUrl}
+              alt={track.name}
+              className="w-full h-48 object-cover rounded-lg mb-4"
+            />
+            <h2 className="text-lg font-bold">{track.name}</h2>
+            <p className="text-gray-400">{track.artist}</p>
+            <audio controls className="w-full mt-4">
+              <source src={track.previewUrl} type="audio/mpeg" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
         ))}
       </div>
     </div>
