@@ -34,3 +34,12 @@ export async function getAccessToken(): Promise<string> {
     throw new Error("Error fetching access token");
   }
 }
+
+export async function getUserAccessToken(): Promise<string | null> {
+  const token = ""; // 클라이언트 측에서 전달받은 토큰(쿠키, 세션 등에서 가져옴)
+  if (!token) {
+    console.error("User token is missing");
+    return null;
+  }
+  return token;
+}

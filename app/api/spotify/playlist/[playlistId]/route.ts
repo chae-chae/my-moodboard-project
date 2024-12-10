@@ -1,18 +1,27 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getAccessToken } from "../../../utils/spotify-auth";
+import { NextResponse } from "next/server";
+import { getUserAccessToken } from "../../../utils/spotify-auth";
 
 export async function GET(
-  request: NextRequest,
+  request: Request,
   { params }: { params: { playlistId: string } }
 ) {
-  const { playlistId } = params; // 동적으로 playlistId 추출
+  const { playlistId } = params;
+  console.log("Received Playlist ID:", playlistId);
 
   try {
-    // Spotify API Access Token 가져오기
-    const accessToken = await getAccessToken();
+    // 사용자 Access Token 가져오기
+    const accessToken = await getUserAccessToken(); // 새 함수 사용
+    console.log("Access Token:", accessToken);
 
-    // Spotify API 요청
-    const response = await fetch(
+    if (!accessToken) {
+      return NextResponse.json(
+        { error: "Access Token is missing or invalid" },
+        { status: 401 }
+      );
+    }
+
+    // Spotify API 호출
+    const spotifyResponse = await fetch(
       `https://api.spotify.com/v1/playlists/${playlistId}`,
       {
         headers: {
@@ -21,19 +30,20 @@ export async function GET(
       }
     );
 
-    if (!response.ok) {
+    if (!spotifyResponse.ok) {
+      const errorData = await spotifyResponse.json();
       return NextResponse.json(
-        { error: "Failed to fetch playlist data" },
-        { status: response.status }
+        { error: "Failed to fetch playlist data", details: errorData },
+        { status: spotifyResponse.status }
       );
     }
 
-    const playlistData = await response.json();
-    return NextResponse.json(playlistData); // 성공적으로 데이터 반환
+    const playlistData = await spotifyResponse.json();
+    return NextResponse.json(playlistData);
   } catch (error) {
-    console.error("Error fetching playlist:", error);
+    console.error("Unexpected Error:", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: "An unexpected error occurred", details: error },
       { status: 500 }
     );
   }

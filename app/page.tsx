@@ -1,4 +1,5 @@
 import PlaylistForm from "./components/PlaylistForm";
+import LoginButton from "./components/LoginButton";
 
 export default function HomePage() {
   return (
@@ -10,6 +11,9 @@ export default function HomePage() {
           vibe of your playlist.
         </p>
         <PlaylistForm />
+        <div className="mt-6">
+          <LoginButton />
+        </div>
       </div>
     </div>
   );
