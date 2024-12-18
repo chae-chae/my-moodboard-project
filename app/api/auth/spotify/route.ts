@@ -1,15 +1,35 @@
 import { NextResponse } from "next/server";
 
-const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID!;
-const REDIRECT_URI = process.env.SPOTIFY_REDIRECT_URI!;
-const SCOPES = ["playlist-read-private", "playlist-read-collaborative"].join(
-  " "
-);
+export async function POST(request: Request) {
+  const { code } = await request.json();
 
-export async function GET() {
-  const authUrl = `https://accounts.spotify.com/authorize?response_type=code&client_id=${CLIENT_ID}&scope=${encodeURIComponent(
-    SCOPES
-  )}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
+  const body = new URLSearchParams({
+    grant_type: "authorization_code",
+    code,
+    redirect_uri: process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI || "",
+    client_id: process.env.SPOTIFY_CLIENT_ID || "",
+    client_secret: process.env.SPOTIFY_CLIENT_SECRET || "",
+  });
 
-  return NextResponse.redirect(authUrl);
+  try {
+    const response = await fetch("https://accounts.spotify.com/api/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error("Spotify API error:", error);
+      return NextResponse.json({ error }, { status: response.status });
+    }
+
+    const tokens = await response.json();
+    return NextResponse.json(tokens); // Access Token과 Refresh Token 반환
+  } catch (error: any) {
+    console.error("Error fetching Access Token:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
