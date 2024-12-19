@@ -23,10 +23,19 @@ export default function MoodboardPage({
 }: {
   params: { playlistId: string };
 }) {
-  const playlistId = params.playlistId; // 동적 라우트에서 params를 안전하게 처리
   const [playlistData, setPlaylistData] = useState<PlaylistData | null>(null);
+  const [playlistId, setPlaylistId] = useState<string | null>(null);
 
   useEffect(() => {
+    // params를 안전하게 처리
+    if (params?.playlistId) {
+      setPlaylistId(params.playlistId);
+    }
+  }, [params]);
+
+  useEffect(() => {
+    if (!playlistId) return;
+
     const fetchPlaylistData = async () => {
       try {
         const response = await fetch(`/api/spotify/playlist/${playlistId}`);
