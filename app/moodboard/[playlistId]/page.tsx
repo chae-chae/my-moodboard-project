@@ -19,10 +19,11 @@ interface Track {
 }
 
 export default function MoodboardPage({
-  params: { playlistId },
+  params,
 }: {
   params: { playlistId: string };
 }) {
+  const playlistId = params.playlistId; // 동적 라우트에서 params를 안전하게 처리
   const [playlistData, setPlaylistData] = useState<PlaylistData | null>(null);
 
   useEffect(() => {
