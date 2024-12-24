@@ -16,14 +16,16 @@ interface ModalProps {
 const Modal: React.FC<ModalProps> = ({ isOpen, track, onClose }) => {
   const [visible, setVisible] = useState(false);
 
+  // 모달이 열리고 닫히는 상태 관리
   useEffect(() => {
     if (isOpen) {
-      setVisible(true);
+      setVisible(true); // 애니메이션 시작
     } else {
-      setTimeout(() => setVisible(false), 500); // 애니메이션 후 모달 제거
+      setTimeout(() => setVisible(false), 500); // 닫힌 후 제거
     }
   }, [isOpen]);
 
+  // 클릭 방지 및 렌더링 조건
   if (!visible && !isOpen) return null;
 
   const handleBackgroundClick = (e: React.MouseEvent) => {
@@ -34,19 +36,19 @@ const Modal: React.FC<ModalProps> = ({ isOpen, track, onClose }) => {
 
   return (
     <div
-      className={`fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-500 ${
-        isOpen ? "opacity-100" : "opacity-0"
+      className={`fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-75 transition-opacity duration-500 ${
+        isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
       }`}
       onClick={handleBackgroundClick}
     >
       <div
         className={`relative w-80 h-80 md:w-96 md:h-96 bg-cover bg-center rounded-lg shadow-lg overflow-hidden transform transition-all duration-500 ease-out ${
-          isOpen ? "opacity-100 scale-100" : "opacity-0 scale-75"
+          isOpen ? "opacity-100 scale-100" : "opacity-0 scale-90"
         }`}
         style={{
           backgroundImage: `url(${track?.imageUrl})`,
         }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()} // 클릭 이벤트 전파 방지
       >
         {/* 반투명 오버레이 */}
         <div className="absolute inset-0 bg-black bg-opacity-60 flex flex-col justify-between p-6 text-white">
