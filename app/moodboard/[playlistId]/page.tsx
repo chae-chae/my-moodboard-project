@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Modal from "./components/Modal";
+import PlayButton from "../../components/PlayButton";
 
 interface PlaylistData {
   name: string;
@@ -27,11 +27,7 @@ export default function MoodboardPage({
   const [playlistData, setPlaylistData] = useState<PlaylistData | null>(null);
   const [playlistId, setPlaylistId] = useState<string | null>(null);
 
-  const [selectedTrack, setSelectedTrack] = useState<Track | null>(null); // 선택된 트랙 상태
-  const [isModalOpen, setIsModalOpen] = useState(false); // 모달 상태
-
   useEffect(() => {
-    // params를 안전하게 처리
     if (params?.playlistId) {
       setPlaylistId(params.playlistId);
     }
@@ -73,16 +69,6 @@ export default function MoodboardPage({
     fetchPlaylistData();
   }, [playlistId]);
 
-  const openModal = (track: Track) => {
-    setSelectedTrack(track);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setSelectedTrack(null);
-    setIsModalOpen(false);
-  };
-
   if (!playlistData) {
     return <div className="text-white text-center">Loading...</div>;
   }
@@ -99,13 +85,17 @@ export default function MoodboardPage({
             className="w-64 h-64 mx-auto mt-4 rounded-lg shadow-lg"
           />
         )}
+
+        {/* PlayButton 컴포넌트 사용 */}
+        {playlistId && <PlayButton playlistId={playlistId} />}
       </header>
+
+      {/* Track List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
         {playlistData.tracks.map((track) => (
           <div
             key={track.id}
-            className="bg-gray-800 p-4 rounded-lg shadow-lg hover:bg-gray-700 transition cursor-pointer"
-            onClick={() => openModal(track)} // 클릭 시 모달 열기
+            className="bg-gray-800 p-4 rounded-lg shadow-lg hover:bg-gray-700 transition"
           >
             {track.imageUrl && (
               <img
@@ -116,12 +106,17 @@ export default function MoodboardPage({
             )}
             <h2 className="text-lg font-bold">{track.name}</h2>
             <p className="text-gray-400">{track.artist}</p>
+            {track.previewUrl ? (
+              <audio controls className="w-full mt-4">
+                <source src={track.previewUrl} type="audio/mpeg" />
+                Your browser does not support the audio element.
+              </audio>
+            ) : (
+              <p className="text-gray-500 mt-4">No preview available</p>
+            )}
           </div>
         ))}
       </div>
-
-      {/* Modal Component */}
-      <Modal isOpen={isModalOpen} track={selectedTrack} onClose={closeModal} />
     </div>
   );
 }
