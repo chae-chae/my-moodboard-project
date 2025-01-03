@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import PlayAllButton from "../../components/PlayAllButton";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 interface PlaylistData {
   name: string;
@@ -69,6 +69,19 @@ export default function MoodboardPage({
     fetchPlaylistData();
   }, [playlistId]);
 
+  // 드래그 앤 드롭 핸들러
+  const handleOnDragEnd = (result: any) => {
+    if (!result.destination) return;
+
+    const updatedTracks = Array.from(playlistData?.tracks || []);
+    const [reorderedItem] = updatedTracks.splice(result.source.index, 1);
+    updatedTracks.splice(result.destination.index, 0, reorderedItem);
+
+    setPlaylistData((prev) =>
+      prev ? { ...prev, tracks: updatedTracks } : prev
+    );
+  };
+
   if (!playlistData) {
     return <div className="text-white text-center">Loading...</div>;
   }
@@ -85,37 +98,52 @@ export default function MoodboardPage({
             className="w-64 h-64 mx-auto mt-4 rounded-lg shadow-lg"
           />
         )}
-        {/* PlayAllButton 추가 */}
-        <div className="mt-6">
-          <PlayAllButton tracks={playlistData.tracks} />
-        </div>
       </header>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-        {playlistData.tracks.map((track) => (
-          <div
-            key={track.id}
-            className="bg-gray-800 p-4 rounded-lg shadow-lg hover:bg-gray-700 transition"
-          >
-            {track.imageUrl && (
-              <img
-                src={track.imageUrl}
-                alt={track.name}
-                className="w-full h-48 object-cover rounded-lg mb-4"
-              />
-            )}
-            <h2 className="text-lg font-bold">{track.name}</h2>
-            <p className="text-gray-400">{track.artist}</p>
-            {track.previewUrl ? (
-              <audio controls className="w-full mt-4">
-                <source src={track.previewUrl} type="audio/mpeg" />
-                Your browser does not support the audio element.
-              </audio>
-            ) : (
-              <p className="text-gray-500 mt-4">No preview available</p>
-            )}
-          </div>
-        ))}
-      </div>
+      <DragDropContext onDragEnd={handleOnDragEnd}>
+        <Droppable droppableId="tracks">
+          {(provided) => (
+            <div
+              {...provided.droppableProps}
+              ref={provided.innerRef}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8"
+            >
+              {playlistData.tracks.map((track, index) => (
+                <Draggable key={track.id} draggableId={track.id} index={index}>
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      className="bg-gray-800 p-4 rounded-lg shadow-lg hover:bg-gray-700 transition"
+                    >
+                      {track.imageUrl && (
+                        <img
+                          src={track.imageUrl}
+                          alt={track.name}
+                          className="w-full h-48 object-cover rounded-lg mb-4"
+                        />
+                      )}
+                      <h2 className="text-lg font-bold">{track.name}</h2>
+                      <p className="text-gray-400">{track.artist}</p>
+                      {track.previewUrl ? (
+                        <audio controls className="w-full mt-4">
+                          <source src={track.previewUrl} type="audio/mpeg" />
+                          Your browser does not support the audio element.
+                        </audio>
+                      ) : (
+                        <p className="text-gray-500 mt-4">
+                          No preview available
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
     </div>
   );
 }
