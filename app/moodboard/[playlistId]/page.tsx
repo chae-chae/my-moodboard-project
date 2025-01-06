@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { themes } from "../../../lib/themes";
 
 interface PlaylistData {
   name: string;
@@ -26,6 +27,8 @@ export default function MoodboardPage({
 }) {
   const [playlistData, setPlaylistData] = useState<PlaylistData | null>(null);
   const [playlistId, setPlaylistId] = useState<string | null>(null);
+  const [themeName, setThemeName] = useState<keyof typeof themes>("dark");
+  const currentTheme = themes[themeName];
 
   useEffect(() => {
     if (params?.playlistId) {
@@ -83,11 +86,21 @@ export default function MoodboardPage({
   };
 
   if (!playlistData) {
-    return <div className="text-white text-center">Loading...</div>;
+    return (
+      <div className="text-center" style={{ color: currentTheme.text }}>
+        Loading...
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-[#121212] text-white p-8">
+    <div
+      className="min-h-screen p-8"
+      style={{
+        backgroundColor: currentTheme.background,
+        color: currentTheme.text,
+      }}
+    >
       <header className="text-center">
         <h1 className="text-4xl font-bold">{playlistData.name}</h1>
         <p className="text-gray-400">{playlistData.description}</p>
@@ -98,6 +111,27 @@ export default function MoodboardPage({
             className="w-64 h-64 mx-auto mt-4 rounded-lg shadow-lg"
           />
         )}
+        <div className="mt-4">
+          {Object.keys(themes).map((theme) => (
+            <button
+              key={theme}
+              onClick={() => setThemeName(theme as keyof typeof themes)}
+              className="mx-2 px-4 py-2 rounded"
+              style={{
+                backgroundColor:
+                  themeName === theme
+                    ? currentTheme.highlight
+                    : currentTheme.card,
+                color:
+                  themeName === theme
+                    ? currentTheme.text
+                    : currentTheme.background,
+              }}
+            >
+              {theme.charAt(0).toUpperCase() + theme.slice(1)}
+            </button>
+          ))}
+        </div>
       </header>
       <DragDropContext onDragEnd={handleOnDragEnd}>
         <Droppable droppableId="tracks">
@@ -114,7 +148,11 @@ export default function MoodboardPage({
                       ref={provided.innerRef}
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}
-                      className="bg-gray-800 p-4 rounded-lg shadow-lg hover:bg-gray-700 transition"
+                      className="p-4 rounded-lg shadow-lg hover:shadow-xl transition"
+                      style={{
+                        backgroundColor: currentTheme.card,
+                        color: currentTheme.text,
+                      }}
                     >
                       {track.imageUrl && (
                         <img
@@ -124,17 +162,7 @@ export default function MoodboardPage({
                         />
                       )}
                       <h2 className="text-lg font-bold">{track.name}</h2>
-                      <p className="text-gray-400">{track.artist}</p>
-                      {track.previewUrl ? (
-                        <audio controls className="w-full mt-4">
-                          <source src={track.previewUrl} type="audio/mpeg" />
-                          Your browser does not support the audio element.
-                        </audio>
-                      ) : (
-                        <p className="text-gray-500 mt-4">
-                          No preview available
-                        </p>
-                      )}
+                      <p className="text-sm">{track.artist}</p>
                     </div>
                   )}
                 </Draggable>
