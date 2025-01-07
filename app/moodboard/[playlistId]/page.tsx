@@ -20,6 +20,13 @@ interface Track {
   previewUrl: string;
 }
 
+interface Theme {
+  background: string;
+  text: string;
+  card: string;
+  highlight: string;
+}
+
 export default function MoodboardPage({
   params,
 }: {
@@ -28,7 +35,17 @@ export default function MoodboardPage({
   const [playlistData, setPlaylistData] = useState<PlaylistData | null>(null);
   const [playlistId, setPlaylistId] = useState<string | null>(null);
   const [themeName, setThemeName] = useState<keyof typeof themes>("dark");
-  const currentTheme = themes[themeName];
+  const [customThemes, setCustomThemes] = useState<{ [key: string]: Theme }>(
+    {}
+  );
+  const [newTheme, setNewTheme] = useState<Theme>({
+    background: "#ffffff",
+    text: "#000000",
+    card: "#f5f5f5",
+    highlight: "#6200ee",
+  });
+  const [customThemeName, setCustomThemeName] = useState("");
+  const currentTheme = themes[themeName] || customThemes[themeName];
 
   useEffect(() => {
     if (params?.playlistId) {
@@ -85,6 +102,29 @@ export default function MoodboardPage({
     );
   };
 
+  const handleCustomThemeChange = (key: keyof Theme, value: string) => {
+    setNewTheme((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const addCustomTheme = () => {
+    if (!customThemeName.trim()) {
+      alert("Please enter a theme name!");
+      return;
+    }
+    setCustomThemes((prev) => ({
+      ...prev,
+      [customThemeName]: newTheme,
+    }));
+    setCustomThemeName("");
+    setNewTheme({
+      background: "#ffffff",
+      text: "#000000",
+      card: "#f5f5f5",
+      highlight: "#6200ee",
+    });
+    alert(`Custom theme "${customThemeName}" added!`);
+  };
+
   if (!playlistData) {
     return (
       <div className="text-center" style={{ color: currentTheme.text }}>
@@ -112,7 +152,7 @@ export default function MoodboardPage({
           />
         )}
         <div className="mt-4">
-          {Object.keys(themes).map((theme) => (
+          {Object.keys({ ...themes, ...customThemes }).map((theme) => (
             <button
               key={theme}
               onClick={() => setThemeName(theme as keyof typeof themes)}
@@ -131,6 +171,37 @@ export default function MoodboardPage({
               {theme.charAt(0).toUpperCase() + theme.slice(1)}
             </button>
           ))}
+        </div>
+        <div className="mt-8 text-left">
+          <h2 className="text-lg font-bold">Create Custom Theme</h2>
+          <input
+            type="text"
+            placeholder="Theme Name"
+            value={customThemeName}
+            onChange={(e) => setCustomThemeName(e.target.value)}
+            className="block p-2 rounded border border-gray-300 mt-2"
+          />
+          {["background", "text", "card", "highlight"].map((key) => (
+            <div key={key} className="mt-4">
+              <label className="block mb-2">
+                {key.charAt(0).toUpperCase() + key.slice(1)}:
+              </label>
+              <input
+                type="color"
+                value={(newTheme as any)[key]}
+                onChange={(e) =>
+                  handleCustomThemeChange(key as keyof Theme, e.target.value)
+                }
+                className="w-full"
+              />
+            </div>
+          ))}
+          <button
+            onClick={addCustomTheme}
+            className="px-4 py-2 mt-4 bg-blue-500 text-white rounded"
+          >
+            Add Theme
+          </button>
         </div>
       </header>
       <DragDropContext onDragEnd={handleOnDragEnd}>
