@@ -38,13 +38,7 @@ export default function MoodboardPage({
   const [customThemes, setCustomThemes] = useState<{ [key: string]: Theme }>(
     {}
   );
-  const [newTheme, setNewTheme] = useState<Theme>({
-    background: "#ffffff",
-    text: "#000000",
-    card: "#f5f5f5",
-    highlight: "#6200ee",
-  });
-  const [customThemeName, setCustomThemeName] = useState("");
+  const [popupTrack, setPopupTrack] = useState<Track | null>(null); // 트랙 팝업 상태
   const currentTheme = themes[themeName] || customThemes[themeName];
 
   useEffect(() => {
@@ -89,7 +83,6 @@ export default function MoodboardPage({
     fetchPlaylistData();
   }, [playlistId]);
 
-  // 드래그 앤 드롭 핸들러
   const handleOnDragEnd = (result: any) => {
     if (!result.destination) return;
 
@@ -102,27 +95,12 @@ export default function MoodboardPage({
     );
   };
 
-  const handleCustomThemeChange = (key: keyof Theme, value: string) => {
-    setNewTheme((prev) => ({ ...prev, [key]: value }));
+  const openPopup = (track: Track) => {
+    setPopupTrack(track);
   };
 
-  const addCustomTheme = () => {
-    if (!customThemeName.trim()) {
-      alert("Please enter a theme name!");
-      return;
-    }
-    setCustomThemes((prev) => ({
-      ...prev,
-      [customThemeName]: newTheme,
-    }));
-    setCustomThemeName("");
-    setNewTheme({
-      background: "#ffffff",
-      text: "#000000",
-      card: "#f5f5f5",
-      highlight: "#6200ee",
-    });
-    alert(`Custom theme "${customThemeName}" added!`);
+  const closePopup = () => {
+    setPopupTrack(null);
   };
 
   if (!playlistData) {
@@ -151,58 +129,6 @@ export default function MoodboardPage({
             className="w-64 h-64 mx-auto mt-4 rounded-lg shadow-lg"
           />
         )}
-        <div className="mt-4">
-          {Object.keys({ ...themes, ...customThemes }).map((theme) => (
-            <button
-              key={theme}
-              onClick={() => setThemeName(theme as keyof typeof themes)}
-              className="mx-2 px-4 py-2 rounded"
-              style={{
-                backgroundColor:
-                  themeName === theme
-                    ? currentTheme.highlight
-                    : currentTheme.card,
-                color:
-                  themeName === theme
-                    ? currentTheme.text
-                    : currentTheme.background,
-              }}
-            >
-              {theme.charAt(0).toUpperCase() + theme.slice(1)}
-            </button>
-          ))}
-        </div>
-        <div className="mt-8 text-left">
-          <h2 className="text-lg font-bold">Create Custom Theme</h2>
-          <input
-            type="text"
-            placeholder="Theme Name"
-            value={customThemeName}
-            onChange={(e) => setCustomThemeName(e.target.value)}
-            className="block p-2 rounded border border-gray-300 mt-2"
-          />
-          {["background", "text", "card", "highlight"].map((key) => (
-            <div key={key} className="mt-4">
-              <label className="block mb-2">
-                {key.charAt(0).toUpperCase() + key.slice(1)}:
-              </label>
-              <input
-                type="color"
-                value={(newTheme as any)[key]}
-                onChange={(e) =>
-                  handleCustomThemeChange(key as keyof Theme, e.target.value)
-                }
-                className="w-full"
-              />
-            </div>
-          ))}
-          <button
-            onClick={addCustomTheme}
-            className="px-4 py-2 mt-4 bg-blue-500 text-white rounded"
-          >
-            Add Theme
-          </button>
-        </div>
       </header>
       <DragDropContext onDragEnd={handleOnDragEnd}>
         <Droppable droppableId="tracks">
@@ -219,7 +145,8 @@ export default function MoodboardPage({
                       ref={provided.innerRef}
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}
-                      className="p-4 rounded-lg shadow-lg hover:shadow-xl transition"
+                      onClick={() => openPopup(track)} // 팝업 열기
+                      className="p-4 rounded-lg shadow-lg hover:shadow-xl transition cursor-pointer"
                       style={{
                         backgroundColor: currentTheme.card,
                         color: currentTheme.text,
@@ -243,6 +170,39 @@ export default function MoodboardPage({
           )}
         </Droppable>
       </DragDropContext>
+
+      {popupTrack && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+          onClick={closePopup}
+        >
+          <div
+            className="bg-white p-6 rounded-lg shadow-lg w-96"
+            onClick={(e) => e.stopPropagation()} // 부모 클릭 이벤트 막기
+          >
+            <button
+              className="text-red-500 font-bold text-right w-full"
+              onClick={closePopup}
+            >
+              Close
+            </button>
+            <img
+              src={popupTrack.imageUrl}
+              alt={popupTrack.name}
+              className="w-full h-48 object-cover rounded-lg mb-4"
+            />
+            <h2 className="text-lg font-bold">{popupTrack.name}</h2>
+            <p className="text-sm">{popupTrack.artist}</p>
+            <p className="text-sm">{popupTrack.album}</p>
+            {popupTrack.previewUrl && (
+              <audio controls className="mt-4 w-full">
+                <source src={popupTrack.previewUrl} type="audio/mpeg" />
+                Your browser does not support the audio element.
+              </audio>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
