@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { themes } from "../../../lib/themes";
+import ThemePreview from "../[playlistId]/components/ThemePreview"; // 새로 추가된 컴포넌트 import
 
 interface PlaylistData {
   name: string;
@@ -130,6 +131,15 @@ export default function MoodboardPage({
           />
         )}
       </header>
+
+      {/* 테마 미리보기 컴포넌트 */}
+      <ThemePreview
+        currentThemeName={themeName}
+        customThemes={customThemes}
+        onThemeSelect={(theme) => setThemeName(theme as keyof typeof themes)}
+      />
+
+      {/* 드래그 앤 드롭 */}
       <DragDropContext onDragEnd={handleOnDragEnd}>
         <Droppable droppableId="tracks">
           {(provided) => (
