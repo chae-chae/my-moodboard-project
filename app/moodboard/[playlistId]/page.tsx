@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { themes } from "../../../lib/themes";
-import ThemePreview from "../[playlistId]/components/ThemePreview"; // 새로 추가된 컴포넌트 import
+import PlaylistHeader from "./components/PlaylistHeader";
+import ThemePreview from "./components/ThemePreview";
+import TrackList from "./components/TrackList";
+import TrackPopup from "./components/TrackPopup";
 
 interface PlaylistData {
   name: string;
@@ -120,99 +122,30 @@ export default function MoodboardPage({
         color: currentTheme.text,
       }}
     >
-      <header className="text-center">
-        <h1 className="text-4xl font-bold">{playlistData.name}</h1>
-        <p className="text-gray-400">{playlistData.description}</p>
-        {playlistData.imageUrl && (
-          <img
-            src={playlistData.imageUrl}
-            alt={playlistData.name}
-            className="w-64 h-64 mx-auto mt-4 rounded-lg shadow-lg"
-          />
-        )}
-      </header>
+      {/* 플레이리스트 헤더 */}
+      <PlaylistHeader
+        name={playlistData.name}
+        description={playlistData.description}
+        imageUrl={playlistData.imageUrl}
+      />
 
-      {/* 테마 미리보기 컴포넌트 */}
+      {/* 테마 미리보기 */}
       <ThemePreview
         currentThemeName={themeName}
         customThemes={customThemes}
         onThemeSelect={(theme) => setThemeName(theme as keyof typeof themes)}
       />
 
-      {/* 드래그 앤 드롭 */}
-      <DragDropContext onDragEnd={handleOnDragEnd}>
-        <Droppable droppableId="tracks">
-          {(provided) => (
-            <div
-              {...provided.droppableProps}
-              ref={provided.innerRef}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8"
-            >
-              {playlistData.tracks.map((track, index) => (
-                <Draggable key={track.id} draggableId={track.id} index={index}>
-                  {(provided) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      {...provided.dragHandleProps}
-                      onClick={() => openPopup(track)} // 팝업 열기
-                      className="p-4 rounded-lg shadow-lg hover:shadow-xl transition cursor-pointer"
-                      style={{
-                        backgroundColor: currentTheme.card,
-                        color: currentTheme.text,
-                      }}
-                    >
-                      {track.imageUrl && (
-                        <img
-                          src={track.imageUrl}
-                          alt={track.name}
-                          className="w-full h-48 object-cover rounded-lg mb-4"
-                        />
-                      )}
-                      <h2 className="text-lg font-bold">{track.name}</h2>
-                      <p className="text-sm">{track.artist}</p>
-                    </div>
-                  )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
-      </DragDropContext>
+      {/* 드래그 앤 드롭 트랙 리스트 */}
+      <TrackList
+        tracks={playlistData.tracks}
+        theme={currentTheme}
+        onDragEnd={handleOnDragEnd}
+        onTrackClick={openPopup}
+      />
 
-      {popupTrack && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-          onClick={closePopup}
-        >
-          <div
-            className="bg-white p-6 rounded-lg shadow-lg w-96"
-            onClick={(e) => e.stopPropagation()} // 부모 클릭 이벤트 막기
-          >
-            <button
-              className="text-red-500 font-bold text-right w-full"
-              onClick={closePopup}
-            >
-              Close
-            </button>
-            <img
-              src={popupTrack.imageUrl}
-              alt={popupTrack.name}
-              className="w-full h-48 object-cover rounded-lg mb-4"
-            />
-            <h2 className="text-lg font-bold">{popupTrack.name}</h2>
-            <p className="text-sm">{popupTrack.artist}</p>
-            <p className="text-sm">{popupTrack.album}</p>
-            {popupTrack.previewUrl && (
-              <audio controls className="mt-4 w-full">
-                <source src={popupTrack.previewUrl} type="audio/mpeg" />
-                Your browser does not support the audio element.
-              </audio>
-            )}
-          </div>
-        </div>
-      )}
+      {/* 트랙 팝업 */}
+      <TrackPopup track={popupTrack} onClose={closePopup} />
     </div>
   );
 }
